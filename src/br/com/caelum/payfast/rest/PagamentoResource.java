@@ -8,8 +8,10 @@ import java.util.Map;
 
 import javax.ejb.Singleton;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -49,14 +51,36 @@ public class PagamentoResource {
 		pagamento.setId(idPagamento++);
 		pagamento.setValor(transacao.getValor());
 		
+		pagamento.comStatusCriado();
+		
 		repositorio.put(pagamento.getId(), pagamento);
 		
-		System.out.println("PAGAMENTO CRUADO " + pagamento);
+		System.out.println("PAGAMENTO CRIADO " + pagamento);
 		
 		return Response.created(new URI("/pagamentos/" + pagamento.getId()))
 				.entity(pagamento)
 					.type(MediaType.APPLICATION_JSON_TYPE)
 						.build();
 	}
+	
+	@PUT
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Pagamento confirmarPagamento(@PathParam("id") Integer pagamentoId) {
+		Pagamento pagamento = repositorio.get(pagamentoId);
+		pagamento.comStatusConfirmado();
+		System.out.println("Pagamento confirmado: " + pagamento);
+		return pagamento;
+	}
 
+	@PATCH
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Pagamento cancelarPagamento(@PathParam("id") Integer pagamentoId) {
+		Pagamento pagamento = repositorio.get(pagamentoId);
+		System.out.println("Pagamento : " + pagamento);
+		pagamento.comStatusCancelado();
+		System.out.println("Pagamento cancelado: " + pagamento);
+		return pagamento;
+	}
 }
