@@ -33,12 +33,29 @@ public class CodeGrantAuthorizationServlet extends HttpServlet {
 			String senha = req.getParameter("senha");
 			String redirectURI = (String) session.getAttribute("redirectURI");
 			
-			// Valida as credenciais do usuário
+			// Valida as credenciais do usuï¿½rio
 			if("usuario".equals(login) && "senha".equals(senha)) {
 				OAuthResponse oAuthResponse = null;
-				// código para gerar o authorization code
+				// cï¿½digo para gerar o authorization code
+				OAuthIssuer issuer = new OAuthIssuerImpl(new MD5Generator());
+				String accessToken = issuer.accessToken();
+				tokenDao.adicionaAccessToken(accessToken);
+				oAuthResponse = OAuthASResponse
+						.tokenResponse(HttpServletResponse.SC_OK)
+						.setAccessToken(accessToken)
+						.setTokenType("Bearer")
+						.buildJSONMessage();
 				
+				String code = issuer.authorizationCode();
+				tokenDao.adicionaAuthorizationCode(code);
 				
+				OAuthAuthorizationResponseBuilder builder = OAuthASResponse
+						.authorizationResponse(req, 302);
+				
+				oAuthResponse = builder.location(redirectURI)
+						.setCode(code)
+						.buildQueryMessage();
+				resp.sendRedirect(oAuthResponse.getLocationUri());
 				
 				// Envia o authorization code para o client application
 				resp.sendRedirect(oAuthResponse.getLocationUri());
